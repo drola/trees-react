@@ -1,0 +1,37 @@
+.tree-node circle {
+    fill: lightgrey;
+    stroke: grey;
+    stroke-width: 1px;
+}
+
+.tree-node text {
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
+
+.tree-node.tree-node-active circle {
+    stroke: orange;
+    stroke-width: 4px;
+}
+
+
+.tree-node.tree-node-red circle {
+    fill: darkred;
+}
+
+.tree-node.tree-node-red text {
+    fill: white;
+}
+
+.tree-node.tree-node-black circle {
+    fill: black;
+}
+.tree-node.tree-node-black text {
+    fill: white;
+}
+
+
+.tree-connection {
+    stroke-width: 2px;
+    stroke: black;
+}

@@ -33,47 +33,25 @@ class Tree {
     }
 
     dfs() {
-        let node = this.root;
-        let level = 0;
         let list = [];
-        let lefts = 0;
-        let rights = 0;
         let maxLevel = 0;
-
-        while (node !== null) {
+        this.forEach((node, level, stack) => {
+            maxLevel = Math.max(level, maxLevel);
+            let x = 0.0;
+            for(let i = 1; i < stack.length; i++) {
+                if (stack[i-1].left == stack[i]) {
+                    x -= 1/Math.pow(2, i);
+                } else {
+                    x += 1/Math.pow(2, i);
+                }
+            }
             list.push({
                 node :node,
                 level: level,
-                x: rights - lefts
+                x: x,
+                index: node.index
             });
-            maxLevel = Math.max(maxLevel, level);
-
-            if (node.left !== null) {
-                node = node.left;
-                level++;
-                lefts += 1/Math.pow(2, level);
-                continue;
-            }
-
-            while(node !== null && node.parent !== null && (node.parent.right === null || node.parent.right === node )) {
-                if (node.parent.left === node) {
-                    lefts-=1/Math.pow(2, level);
-                } else {
-                    rights-=1/Math.pow(2, level);
-                }
-                level--;
-                node = node.parent;
-            }
-            if (node !== null  && node.parent !== null) {
-                if (node.parent.left === node) {
-                    lefts-= 1/Math.pow(2, level);
-                }
-                node = node.parent.right;
-                rights+=1/Math.pow(2, level);
-            } else {
-                node = null;
-            }
-        }
+        });
 
         list = list.map(function(a) { a.x = a.x * Math.pow(2, maxLevel); return a});
         let listByIndex = {};
@@ -89,10 +67,56 @@ class Tree {
                 connections.push([treeNode_, listByIndex[treeNode_.node.right.index]]);
             }
         });
+        list = list.map(function(o) { delete o.node; return o;});
 
         return [list, connections];
     }
+
+    snapshot(exitingSnapshots) {
+        if(!exitingSnapshots) {
+            exitingSnapshots = [];
+        }
+        exitingSnapshots.push(this.dfs());
+    }
+
+    forEach(callback) {
+        let node = this.root;
+        let stack = [];
+        while(node !== null) {
+            stack.push(node);
+            callback(node, stack.length - 1, stack);
+
+            if (node.left !== null) {
+                node = node.left;
+                continue;
+            }
+
+            while(stack.length >= 2 && (stack[stack.length - 2].right === null || stack[stack.length - 2].right === stack[stack.length - 1])) {
+                stack.pop();
+            }
+            stack.pop();
+            if (stack.length >= 1 && stack[stack.length - 1].right !== null) {
+                node = stack[stack.length - 1].right;
+            } else {
+                node = null;
+            }
+        }
+    }
+
+    /**
+     * Returns new tree with the same structure but with possibly different data on each node
+     *
+     * @param callback
+     */
+    map(callback) {
+
+    }
+
+
+
 }
+
+
 
 
 class TreeNodeView extends Component {
@@ -119,12 +143,14 @@ class TreeView extends  Component {
         let clr = new TreeNode(3);
         let cl = new TreeNode(1, cll, clr);
         let crl = new TreeNode(5);
-        let crrr = new TreeNode(6.1)
+        let crrr = new TreeNode(6.1);
         let crr = new TreeNode(6, crrr);
         let cr = new TreeNode(4, crl, crr);
         let r = new TreeNode(0, cl, cr);
         let t = new Tree(r);
         this.setState({'tree': t});
+
+        t.forEach(console.log);
     }
 
     render() {
@@ -136,7 +162,7 @@ class TreeView extends  Component {
                         <line className="tree-connection" x1={connection[0].x*60} y1={connection[0].level*80} x2={connection[1].x*60} y2={connection[1].level*80} />
                     )
                     }).concat(list.map(function(tn) { return (
-                        <TreeNodeView index={tn.node.index} x={tn.x*60} y={tn.level*80}/>
+                        <TreeNodeView index={tn.index} x={tn.x*60} y={tn.level*80}/>
                     )}))
                 }
             </g>
